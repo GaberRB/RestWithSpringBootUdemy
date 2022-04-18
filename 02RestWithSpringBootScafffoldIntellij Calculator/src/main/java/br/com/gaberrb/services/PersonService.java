@@ -1,45 +1,72 @@
 package br.com.gaberrb.services;
 
-import br.com.gaberrb.model.Person;
+import br.com.gaberrb.converter.DozerConverter;
+import br.com.gaberrb.converter.custom.PersonConverter;
+import br.com.gaberrb.data.model.Person;
+import br.com.gaberrb.data.vo.v1.PersonVO;
+import br.com.gaberrb.data.vo.v2.PersonVOV2;
+import br.com.gaberrb.repository.PersonRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class PersonService {
 
-    private final AtomicLong counter = new AtomicLong();
+    @Autowired
+    PersonRepository repository;
 
-    public Person findById(String id){
-        Person person = new Person();
-        person.setId(counter.incrementAndGet());
-        person.setFirtName("Gaber");
-        person.setLastName("Rios");
-        person.setAddress("Rua lala");
-        person.setGender("Masculino");
-        return person;
+    @Autowired
+    PersonConverter converter;
+
+    public PersonVO create(PersonVO person) {
+        var entity = DozerConverter.parseObject(person, Person.class);
+        var vo = DozerConverter.parseObject(repository.save(entity), PersonVO.class);
+        return vo;
     }
 
-    public List<Person> findAll(){
-
-        List<Person> persons = new ArrayList<Person>();
-        for (int i = 0; i < 7; i++) {
-            Person person = mockPerson(i);
-            persons.add(person);
-            
-        }
-        return persons;
+    public PersonVOV2 createV2(PersonVOV2 person) {
+        var entity = converter.convertVOToEntity(person);
+        var vo = converter.convertEntityToVO(repository.save(entity));
+        return vo;
     }
 
-    private Person mockPerson(int i) {
-        Person person = new Person();
-        person.setId(counter.incrementAndGet());
-        person.setFirtName("Person name" + i);
-        person.setLastName("Last Name" + i);
-        person.setAddress("Address" + i);
-        person.setGender("Gender" + i);
-        return person;
+    public List<PersonVO> findAll() {
+
+        return DozerConverter.parseListObjects(repository.findAll(), PersonVO.class);
     }
+
+    public PersonVO findById(Long id){
+
+        var entity = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID"));
+
+        return DozerConverter.parseObject(entity, PersonVO.class);
+
+    }
+
+    public PersonVO update(PersonVO person){
+        var entity = repository.findById(person.getKey())
+                .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID"));
+
+        entity.setFirstName(person.getFirstName());
+        entity.setLastName(person.getLastName());
+        entity.setAddress(person.getAddress());
+        entity.setGender(person.getGender());
+
+        var vo = DozerConverter.parseObject(repository.save(entity), PersonVO.class);
+
+        return vo;
+    }
+
+    public void delete(Long id){
+        Person entity = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID"));
+        repository.delete(entity);
+    }
+
+
+
 }
