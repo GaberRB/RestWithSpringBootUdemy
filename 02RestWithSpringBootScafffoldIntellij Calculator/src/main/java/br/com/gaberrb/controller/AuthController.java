@@ -2,10 +2,9 @@ package br.com.gaberrb.controller;
 
 import static org.springframework.http.ResponseEntity.ok;
 
-import br.com.gaberrb.repository.UserRepository;
-import br.com.gaberrb.security.AccountCredentialsVO;
-import br.com.gaberrb.security.jwt.JwtTokenProvider;
-import io.swagger.annotations.ApiOperation;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,11 +12,18 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
+import br.com.gaberrb.repository.UserRepository;
+import br.com.gaberrb.security.AccountCredentialsVO;
+import br.com.gaberrb.security.jwt.JwtTokenProvider;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
+@Api(tags = "AuthenticationEndpoint")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -29,38 +35,35 @@ public class AuthController {
     JwtTokenProvider tokenProvider;
 
     @Autowired
-    UserRepository userRepository;
+    UserRepository repository;
 
-    @ApiOperation(value = "Authenticate a user by credentials")
-    @PostMapping(value = "/signin", produces = {"application/json", "application/xml", "application/x-yaml"},
-                consumes = {"application/json", "application/xml", "application/x-yaml"})
-    public ResponseEntity signin(@RequestBody AccountCredentialsVO data){
+    @ApiOperation(value = "Authenticates a user and returns a token")
+    @SuppressWarnings("rawtypes")
+    @PostMapping(value = "/signin", produces = { "application/json", "application/xml", "application/x-yaml" },
+            consumes = { "application/json", "application/xml", "application/x-yaml" })
+    public ResponseEntity signin(@RequestBody AccountCredentialsVO data) {
         try {
+            var username = data.getUsername();
+            var pasword = data.getPassword();
 
-            var username = data.getUserName();
-            var password = data.getPassword();
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, pasword));
 
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+            var user = repository.findByUsername(username);
 
-            var user = userRepository.findByUserName(username);
             var token = "";
 
-            if (user != null){
+            if (user != null) {
                 token = tokenProvider.createToken(username, user.getRoles());
-            }else {
-                throw new UsernameNotFoundException("Username " + username + " not found");
+            } else {
+                throw new UsernameNotFoundException("Username " + username + " not found!");
             }
 
             Map<Object, Object> model = new HashMap<>();
-
             model.put("username", username);
             model.put("token", token);
-
             return ok(model);
-
-        }catch (AuthenticationException e){
-            throw new BadCredentialsException("Invalid username/password invalid");
+        } catch (AuthenticationException e) {
+            throw new BadCredentialsException("Invalid username/password supplied!");
         }
     }
-
 }

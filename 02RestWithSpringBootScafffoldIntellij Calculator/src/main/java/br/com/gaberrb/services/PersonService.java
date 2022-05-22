@@ -9,6 +9,7 @@ import br.com.gaberrb.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -59,6 +60,18 @@ public class PersonService {
         var vo = DozerConverter.parseObject(repository.save(entity), PersonVO.class);
 
         return vo;
+    }
+
+    @Transactional
+    public PersonVO disbablePerson(Long id){
+
+        repository.disablePerson(id);
+
+        var entity = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No records found for this ID"));
+
+        return DozerConverter.parseObject(entity, PersonVO.class);
+
     }
 
     public void delete(Long id){

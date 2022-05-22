@@ -64,6 +64,15 @@ public class PersonController {
         return personVO;
     }
 
+    @ApiOperation(value = "Disabilita a pessoa do banco de dados")
+    @PatchMapping(value = "{id}", produces = {"application/json", "application/xml", "application/x-yaml"})
+    public PersonVO disbablePerson(@PathVariable("id") Long id) {
+        var personVO = service.disbablePerson(id);
+        personVO.add(linkTo(methodOn(PersonController.class).findById(id)).withSelfRel());
+
+        return personVO;
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable("id") Long id){
         service.delete(id);

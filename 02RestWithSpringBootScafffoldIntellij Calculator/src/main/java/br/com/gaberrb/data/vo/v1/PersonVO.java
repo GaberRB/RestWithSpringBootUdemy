@@ -9,7 +9,7 @@ import org.springframework.hateoas.ResourceSupport;
 import java.io.Serializable;
 import java.util.Objects;
 
-@JsonPropertyOrder({"id", "address", "first_name", "last_name", "gender"})
+@JsonPropertyOrder({"id", "address", "first_name", "last_name", "gender", "enabled"})
 public class PersonVO extends ResourceSupport implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -28,6 +28,8 @@ public class PersonVO extends ResourceSupport implements Serializable {
 
     @JsonIgnore
     private String gender;
+
+    private Boolean enabled;
 
     public PersonVO() {
     }
@@ -72,17 +74,25 @@ public class PersonVO extends ResourceSupport implements Serializable {
         this.gender = gender;
     }
 
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof PersonVO)) return false;
         if (!super.equals(o)) return false;
         PersonVO personVO = (PersonVO) o;
-        return Objects.equals(getKey(), personVO.getKey()) && Objects.equals(getFirstName(), personVO.getFirstName()) && Objects.equals(getLastName(), personVO.getLastName()) && Objects.equals(getAddress(), personVO.getAddress()) && Objects.equals(getGender(), personVO.getGender());
+        return Objects.equals(getKey(), personVO.getKey()) && Objects.equals(getFirstName(), personVO.getFirstName()) && Objects.equals(getLastName(), personVO.getLastName()) && Objects.equals(getAddress(), personVO.getAddress()) && Objects.equals(getGender(), personVO.getGender()) && Objects.equals(getEnabled(), personVO.getEnabled());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getKey(), getFirstName(), getLastName(), getAddress(), getGender());
+        return Objects.hash(super.hashCode(), getKey(), getFirstName(), getLastName(), getAddress(), getGender(), getEnabled());
     }
 }
