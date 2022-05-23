@@ -5,10 +5,10 @@ import br.com.gaberrb.data.model.Book;
 import br.com.gaberrb.data.vo.v1.BookVO;
 import br.com.gaberrb.repository.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class BookService {
@@ -22,10 +22,17 @@ public class BookService {
         return vo;
     }
 
-    public List<BookVO> findAll() {
+    public Page<BookVO> findAll(Pageable pageable) {
 
-        return DozerConverter.parseListObjects(repository.findAll(), BookVO.class);
+       var page = repository.findAll(pageable);
+
+       return page.map(this :: convertToBookVO);
     }
+
+    private BookVO convertToBookVO(Book entity){
+        return DozerConverter.parseObject(repository.save(entity), BookVO.class);
+    }
+
 
     public BookVO findById(Long id){
 

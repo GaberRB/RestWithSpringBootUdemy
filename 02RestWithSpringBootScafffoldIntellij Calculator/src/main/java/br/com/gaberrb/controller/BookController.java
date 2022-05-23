@@ -7,6 +7,13 @@ import br.com.gaberrb.data.vo.v1.BookVO;
 import br.com.gaberrb.data.vo.v1.PersonVO;
 import br.com.gaberrb.services.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.PagedResources;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,8 +28,17 @@ public class BookController {
     BookService service;
 
     @GetMapping(produces = {"application/json", "application/xml", "application/x-yaml"})
-    public List<BookVO> findAll(){
-        var books = service.findAll();
+    public ResponseEntity<PagedResources<BookVO>> findAll(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "limit", defaultValue = "2") int limit,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction,
+            PagedResourcesAssembler assembler
+    ){
+        var sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, limit, Sort.by(sortDirection, "firstName"));
+
+        Page<BookVO> books = service.findAll(pageable);
 
         books.stream()
                 .forEach(b -> b.add(
@@ -30,7 +46,7 @@ public class BookController {
                         )
                 );
 
-        return books;
+        return new ResponseEntity<>(assembler.toResource(books), HttpStatus.OK);
     }
 
     @GetMapping(value = "{id}", produces = {"application/json", "application/xml", "application/x-yaml"})

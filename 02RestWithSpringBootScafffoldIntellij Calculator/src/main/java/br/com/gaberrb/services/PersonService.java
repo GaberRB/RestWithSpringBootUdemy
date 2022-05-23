@@ -7,6 +7,8 @@ import br.com.gaberrb.data.vo.v1.PersonVO;
 import br.com.gaberrb.data.vo.v2.PersonVOV2;
 import br.com.gaberrb.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,9 +36,22 @@ public class PersonService {
         return vo;
     }
 
-    public List<PersonVO> findAll() {
+    public Page<PersonVO> findAll(Pageable pageable) {
 
-        return DozerConverter.parseListObjects(repository.findAll(), PersonVO.class);
+        var page = repository.findAll(pageable);
+
+        return page.map(this :: convertToPersonVO);
+    }
+
+    public Page<PersonVO> findPersonByName(String firstName, Pageable pageable) {
+
+        var page = repository.findPersonByName(firstName,pageable);
+
+        return page.map(this :: convertToPersonVO);
+    }
+
+    private PersonVO convertToPersonVO(Person entity){
+        return DozerConverter.parseObject(repository.save(entity), PersonVO.class);
     }
 
     public PersonVO findById(Long id){
